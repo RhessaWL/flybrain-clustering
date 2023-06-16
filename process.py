@@ -64,7 +64,7 @@ logging.debug("cluster_dir = %s", cluster_dir)
 
 logging.info("Attempting to read neuron csv with pandas: %s", neuron_csv)
 
-cluster_df = pd.read_csv(cluster_info, delimiter=' ', header=None)
+cluster_df = pd.read_excel(cluster_info)
 local_df = pd.read_csv(neuron_csv, delimiter=' ', header=None).rename(columns={0: "bodyId", 1:" key"})
 local_df = pd.concat([local_df, cluster_df],axis=1).rename(columns={0:"0.0"})
 
