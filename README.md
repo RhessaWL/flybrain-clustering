@@ -24,3 +24,9 @@ In order to use these notebooks, you will need an authorization token to access 
 3. Go to your account (menu in the top right of the screen)
 4. Copy the auth token to a plain text file in the same directory as the notebooks and name it `flybrain.auth`
 
+# Notebook Information
+- The APL folder contains the data used to create the figures in APL/Figures-APL
+- The oviIN folder contains the data used to create the figures in Figures-oviIN
+- The joint-marginal plots were created in the files called joint_marginals_***.ipynb for the oviIN and APL substituted for the *** respectively
+  - [`oviIN`](https://github.com/RhessaWL/flybrain-clustering/blob/main/joint_marginals_graph.ipynb)
+  - [`APL`](https://github.com/RhessaWL/flybrain-clustering/blob/main/joint_marginals_APL.ipynb)
