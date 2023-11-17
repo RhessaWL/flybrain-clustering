@@ -10,7 +10,7 @@ from neuprint import Client, fetch_neurons
 parser = argparse.ArgumentParser()
 parser.add_argument('hemibrain_version',
                     help="Hemibrain version (format as 1.x, no preceding 'v'). Will attempt to read hemibrain/exported-traced-adjacencies-vXX")
-parser.add_argument('--path', default="ovi_combined/clustering_full_v", help="Explicit path; using this ignores positional argument")
+parser.add_argument('--path', default="ovi_combined/clustering_v", help="Explicit path; using this ignores positional argument")
 parser.add_argument('--neuron_csv', default="ovi_comb_full_key.txt", help="Name of neuron csv, bodyIds (key.txt)")
 parser.add_argument('--edge_csv', default="ovi_comb_full_formatted.txt", help="Name of edge csv, if different from traced-total-connections.csv")
 parser.add_argument('--cluster_csv', default="cluster_info.xlsx", help="Name of edge csv, if different from default")
