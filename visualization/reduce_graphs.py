@@ -38,8 +38,8 @@ def reduced_graph(node_df, edge_df, col, suffixes=None,
         re = re.groupby([ru_col, rv_col]).agg({"n_edges": "sum", weight_col: "sum"}).reset_index()
 
     # merge in the cluster sizes and compute possible number of edges
-    re = re.merge(pd.DataFrame(node_df.value_counts(col)), left_on=ru_col, right_index=True).rename(columns={0: "n_cluster1"})
-    re = re.merge(pd.DataFrame(node_df.value_counts(col)), left_on=rv_col, right_index=True).rename(columns={0: "n_cluster2"})
+    re = re.merge(pd.DataFrame(node_df.value_counts(col)), left_on=ru_col, right_index=True).rename(columns={"count": "n_cluster1"})
+    re = re.merge(pd.DataFrame(node_df.value_counts(col)), left_on=rv_col, right_index=True).rename(columns={'count': "n_cluster2"})
     re["possible_edges"] = re["n_cluster1"] * re["n_cluster2"]
     if undirected:
         re["possible_edges"] = re["possible_edges"].where(re[ru_col] != re[rv_col],
