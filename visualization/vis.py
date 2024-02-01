@@ -256,7 +256,6 @@ def draw_graph(node_df, edge_df,
     if edge_draw_function is not None:
         xs, ys = [], []
         for u, v in zip(graph.edge_renderer.data_source.data["start"], graph.edge_renderer.data_source.data["end"]):
-            print(u, v)
             if u != v:
                 x, y = edge_draw_function(graph_layout[u], graph_layout[v])
             else:  # theoretically, you can't reach this point if loop_draw_function is not specified
