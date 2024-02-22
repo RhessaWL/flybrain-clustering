@@ -13,9 +13,15 @@ def log_msg(*args, out=sys.stdout, **kwargs):
 
 def get_connectome(main_neurons, exclude_main_neurons=False, connectome_type='full', weight_threshold=1):
     """Get the personal connectome of neuron or neurons that are inputed by the user. 
-    This function returns a connectome dataframe that contains the weighted connections between bodyIds. The synaptic weights 
-    are collapsed across ROIs. This dataframe can be used to create a graph of the connectome in NetworkX using
-    from_pandas_edgelist. However, the dataframe will need to be reformatted in order to run the clustering algorithms.
+    This function returns both a connectome dataframe that contains the weighted connections between bodyIds and 
+    an undirected dataframe of synapses checked for bidirectionality. The synaptic weights are collapsed across ROIs. 
+    The connectome dataframe can be used to create a graph of the connectome in NetworkX using from_pandas_edgelist. 
+    The undirected dataframe can be used to run the clustering algorithms after saving it to a txt file and running it
+    though A. Kunin's format_edgelist.py script.
+
+    Usage Notes: 
+        - Please makes sure to have your Neuprint client already created before running this function.
+        - Remember to set the outputs to different well-named variable for future use.
     
     main_neurons: can be a single bodyId, a list of bodyIds, or NeuronCriteria
 
@@ -88,6 +94,30 @@ def get_connectome(main_neurons, exclude_main_neurons=False, connectome_type='fu
         log_msg(f'Removing connections with weights less than {weight_threshold}')
         connectome = connectome[connectome['weight'] >= weight_threshold]
 
-    return connectome
+    # make another function to do the bidirectionality check
+    # This function creates an undirected list and accounts for bidirectionality
+    def create_undirected(df):
+        undirected_edges = {}  # Dictionary to store the undirected edges and their weights
 
-# make another function to do the bidirectionality check
+        for index, row in df.iterrows():
+            source = row['bodyId_pre']
+            target = row['bodyId_post']
+            weight = row['weight']
+
+            # Check if the edge already exists in the reverse
+            if (target, source) in undirected_edges:
+                # Update the weight of the existing edge
+                undirected_edges[(target, source)] += weight
+            else:
+                # Add a new edge to dict
+                undirected_edges[(source, target)] = weight
+
+        # Create a DataFrame from the undirected edges dictionary
+        undirected_edgelist = pd.DataFrame(list(undirected_edges.keys()), columns=['source', 'target'])
+        undirected_edgelist['weight'] = list(undirected_edges.values())
+        return undirected_edgelist
+    
+    # create the undirected connectome
+    log_msg(f'Creating the undirected connectome')
+    connectome_undirected = create_undirected(connectome)
+    return connectome_undirected, connectome
