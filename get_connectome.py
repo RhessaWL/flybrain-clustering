@@ -11,7 +11,7 @@ def log_msg(*args, out=sys.stdout, **kwargs):
     if out:
         print(datetime.datetime.now().strftime("%Y %m %d %H:%M:%S "), *args, **kwargs, file=out)
 
-def get_connectome(main_neurons, exclude_main_neurons=False, connectome_type='full', weight_threshold=1):
+def get_connectome(main_neurons, exclude_main_neurons=False, connectome_scope='full', weight_threshold=1, connectome_by_type=False):
     """Get the personal connectome of neuron or neurons that are inputed by the user. 
     This function returns both a connectome dataframe that contains the weighted connections between bodyIds and 
     an undirected dataframe of synapses checked for bidirectionality. The synaptic weights are collapsed across ROIs. 
@@ -44,7 +44,7 @@ def get_connectome(main_neurons, exclude_main_neurons=False, connectome_type='fu
         main_neurons_df, roi_counts_df = fetch_neurons(main_neurons)
         main_neurons = main_neurons_df['bodyId'].tolist()
 
-    if connectome_type == 'input':
+    if connectome_scope == 'input':
         log_msg(f'Getting input connectome')
 
         if exclude_main_neurons:
@@ -56,7 +56,7 @@ def get_connectome(main_neurons, exclude_main_neurons=False, connectome_type='fu
         log_msg(f'Fetching connections among neurons using the bodyIds from pre')
         partners_, connectome = fetch_adjacencies(pre['bodyId'], pre['bodyId'])
 
-    elif connectome_type == 'output':
+    elif connectome_scope == 'output':
         log_msg(f'Getting output connectome')
 
         if exclude_main_neurons:
@@ -68,7 +68,7 @@ def get_connectome(main_neurons, exclude_main_neurons=False, connectome_type='fu
         log_msg(f'Fetching connections among neurons using the bodyIds from post')
         partners_, connectome = fetch_adjacencies(post['bodyId'], post['bodyId'])
 
-    elif connectome_type == 'full':
+    elif connectome_scope == 'full':
         log_msg(f'Getting full connectome')
 
         # combine unique pre and post bodyIds
@@ -93,6 +93,19 @@ def get_connectome(main_neurons, exclude_main_neurons=False, connectome_type='fu
     if weight_threshold > 1:
         log_msg(f'Removing connections with weights less than {weight_threshold}')
         connectome = connectome[connectome['weight'] >= weight_threshold]
+
+     # if connectome_by_type is specified, merge the type information into the connectome and grouby type
+    if connectome_by_type:
+        # merge type_pre information from partners_ into connectome and rename type column to type_pre
+        connectome = connectome.merge(partners_[['bodyId','type']], left_on='bodyId_pre', right_on='bodyId').rename(columns={'type':'type_pre'})
+
+        # merge type_post information from partners_ into connectome and rename type column to type_post
+        connectome = connectome.merge(partners_[['bodyId','type']], left_on='bodyId_post', right_on='bodyId').rename(columns={'type':'type_post'})
+
+        # group by type_pre and type_post and sum the weights
+        connectome = connectome[['type_pre','type_post','weight']].groupby(['type_pre','type_post'], as_index=False).sum()
+
+
 
     # make another function to do the bidirectionality check
     # This function creates an undirected list and accounts for bidirectionality
@@ -120,4 +133,5 @@ def get_connectome(main_neurons, exclude_main_neurons=False, connectome_type='fu
     # create the undirected connectome
     log_msg(f'Creating the undirected connectome')
     connectome_undirected = create_undirected(connectome)
+
     return connectome_undirected, connectome
