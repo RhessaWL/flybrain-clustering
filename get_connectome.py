@@ -11,13 +11,11 @@ def log_msg(*args, out=sys.stdout, **kwargs):
     if out:
         print(datetime.datetime.now().strftime("%Y %m %d %H:%M:%S "), *args, **kwargs, file=out)
 
-def get_connectome(main_neurons, exclude_main_neurons=False, connectome_type='full', weight_threshold=1):
+def get_connectome(main_neurons, exclude_main_neurons=False, connectome_scope='full', weight_threshold=1, connectome_by_type=False):
     """Get the personal connectome of neuron or neurons that are inputed by the user. 
-    This function returns both a connectome dataframe that contains the weighted connections between bodyIds and 
-    an undirected dataframe of synapses checked for bidirectionality. The synaptic weights are collapsed across ROIs. 
-    The connectome dataframe can be used to create a graph of the connectome in NetworkX using from_pandas_edgelist. 
-    The undirected dataframe can be used to run the clustering algorithms after saving it to a txt file and running it
-    though A. Kunin's format_edgelist.py script.
+    This function returns a connectome dataframe that contains the weighted connections between bodyIds. The synaptic weights 
+    are collapsed across ROIs. This dataframe can be used to create a graph of the connectome in NetworkX using
+    from_pandas_edgelist. However, the dataframe will need to be reformatted in order to run the clustering algorithms.
 
     Usage Notes: 
         - Please makes sure to have your Neuprint client already created before running this function.
@@ -44,7 +42,7 @@ def get_connectome(main_neurons, exclude_main_neurons=False, connectome_type='fu
         main_neurons_df, roi_counts_df = fetch_neurons(main_neurons)
         main_neurons = main_neurons_df['bodyId'].tolist()
 
-    if connectome_type == 'input':
+    if connectome_scope == 'input':
         log_msg(f'Getting input connectome')
 
         if exclude_main_neurons:
@@ -56,7 +54,7 @@ def get_connectome(main_neurons, exclude_main_neurons=False, connectome_type='fu
         log_msg(f'Fetching connections among neurons using the bodyIds from pre')
         partners_, connectome = fetch_adjacencies(pre['bodyId'], pre['bodyId'])
 
-    elif connectome_type == 'output':
+    elif connectome_scope == 'output':
         log_msg(f'Getting output connectome')
 
         if exclude_main_neurons:
@@ -68,7 +66,7 @@ def get_connectome(main_neurons, exclude_main_neurons=False, connectome_type='fu
         log_msg(f'Fetching connections among neurons using the bodyIds from post')
         partners_, connectome = fetch_adjacencies(post['bodyId'], post['bodyId'])
 
-    elif connectome_type == 'full':
+    elif connectome_scope == 'full':
         log_msg(f'Getting full connectome')
 
         # combine unique pre and post bodyIds
@@ -94,30 +92,40 @@ def get_connectome(main_neurons, exclude_main_neurons=False, connectome_type='fu
         log_msg(f'Removing connections with weights less than {weight_threshold}')
         connectome = connectome[connectome['weight'] >= weight_threshold]
 
-    # make another function to do the bidirectionality check
-    # This function creates an undirected list and accounts for bidirectionality
-    def create_undirected(df):
-        undirected_edges = {}  # Dictionary to store the undirected edges and their weights
+     # if connectome_by_type is specified, merge the type information into the connectome and grouby type
+    if connectome_by_type:
+        # merge type_pre information from partners_ into connectome and rename type column to type_pre
+        connectome = connectome.merge(partners_[['bodyId','type']], left_on='bodyId_pre', right_on='bodyId').rename(columns={'type':'type_pre'})
 
-        for index, row in df.iterrows():
-            source = row['bodyId_pre']
-            target = row['bodyId_post']
-            weight = row['weight']
+        # merge type_post information from partners_ into connectome and rename type column to type_post
+        connectome = connectome.merge(partners_[['bodyId','type']], left_on='bodyId_post', right_on='bodyId').rename(columns={'type':'type_post'})
 
-            # Check if the edge already exists in the reverse
-            if (target, source) in undirected_edges:
-                # Update the weight of the existing edge
-                undirected_edges[(target, source)] += weight
-            else:
-                # Add a new edge to dict
-                undirected_edges[(source, target)] = weight
+        # group by type_pre and type_post and sum the weights
+        connectome = connectome[['type_pre','type_post','weight']].groupby(['type_pre','type_post'], as_index=False).sum()
 
-        # Create a DataFrame from the undirected edges dictionary
-        undirected_edgelist = pd.DataFrame(list(undirected_edges.keys()), columns=['source', 'target'])
-        undirected_edgelist['weight'] = list(undirected_edges.values())
-        return undirected_edgelist
+# This function creates an undirected list and accounts for bidirectionality
+def create_undirected(df):
+    """Get the undirected list of synapses from a connectome df. 
+    This function returns a undirected list that contains the weighted connections between bodyIds checked for 
+    bidirectionality. This dataframe can be used for modularity analysis but will need to be formatted to run 
+    through the generalized modularity analysis using the format_edgelist written by A. Kunin.
+    """
+    undirected_edges = {}  # Dictionary to store the undirected edges and their weights
+    for index, row in df.iterrows():
+        source = row['bodyId_pre']
+        target = row['bodyId_post']
+        weight = row['weight']
+
+        # Check if the edge already exists in the reverse
+        if (target, source) in undirected_edges:
+            # Update the weight of the existing edge
+            undirected_edges[(target, source)] += weight
+        else:
+            # Add a new edge to dict
+            undirected_edges[(source, target)] = weight
+
+    # Create a DataFrame from the undirected edges dictionary
+    undirected_edgelist = pd.DataFrame(list(undirected_edges.keys()), columns=['source', 'target'])
+    undirected_edgelist['weight'] = list(undirected_edges.values())
     
-    # create the undirected connectome
-    log_msg(f'Creating the undirected connectome')
-    connectome_undirected = create_undirected(connectome)
-    return connectome_undirected, connectome
+    return undirected_edgelist
