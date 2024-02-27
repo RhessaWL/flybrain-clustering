@@ -102,6 +102,7 @@ def get_connectome(main_neurons, exclude_main_neurons=False, connectome_scope='f
 
         # group by type_pre and type_post and sum the weights
         connectome = connectome[['type_pre','type_post','weight']].groupby(['type_pre','type_post'], as_index=False).sum()
+    return connectome
 
 # This function creates an undirected list and accounts for bidirectionality
 def create_undirected(df):

@@ -1,3 +1,5 @@
+## This file requires you to create the cluster_info dataframe and then it merges on bodyID and neuprint data
+
 import os
 # import sys
 import pandas as pd
