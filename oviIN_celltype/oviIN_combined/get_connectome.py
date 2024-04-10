@@ -104,17 +104,23 @@ def get_connectome(main_neurons, exclude_main_neurons=False, connectome_scope='f
         connectome = connectome[['type_pre','type_post','weight']].groupby(['type_pre','type_post'], as_index=False).sum()
     return connectome
 
-# This function creates an undirected list and accounts for bidirectionality
-def create_undirected(df):
-    """Get the undirected list of synapses from a connectome df. 
-    This function returns a undirected list that contains the weighted connections between bodyIds checked for 
-    bidirectionality. This dataframe can be used for modularity analysis but will need to be formatted to run 
-    through the generalized modularity analysis using the format_edgelist written by A. Kunin.
-    """
+# function to combine bidirectional connections and make the connectome undirected
+# this function is based on code from Rhessa's notebook. I believe that Alex's read_graph function in format_edgelight.py
+# does the same thing but in a different way, so this function may be redundant.
+def connectome_to_undirected(connectome):
+    """Combine bidirectional connections and make the connectome undirected.
+    This function takes a connectome dataframe as input and returns an undirected connectome dataframe."""
     undirected_edges = {}  # Dictionary to store the undirected edges and their weights
-    for index, row in df.iterrows():
-        source = row['bodyId_pre']
-        target = row['bodyId_post']
+
+    # Determine the column names for the pre and post neurons
+    # It is better to look for column with *_pre and *_post instead of having to pass in a boolean
+    connectome_columns = connectome.columns
+    pre = [col for col in connectome_columns if 'pre' in col][0]
+    post = [col for col in connectome_columns if 'post' in col][0]
+
+    for index, row in connectome.iterrows():
+        source = row[pre]
+        target = row[post]
         weight = row['weight']
 
         # Check if the edge already exists in the reverse
@@ -128,5 +134,5 @@ def create_undirected(df):
     # Create a DataFrame from the undirected edges dictionary
     undirected_edgelist = pd.DataFrame(list(undirected_edges.keys()), columns=['source', 'target'])
     undirected_edgelist['weight'] = list(undirected_edges.values())
-    
+
     return undirected_edgelist
