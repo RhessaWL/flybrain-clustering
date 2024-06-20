@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import argparse
 import logging
+from neuprint import Client, fetch_neurons
 
 # process commandline args
 parser = argparse.ArgumentParser()
@@ -53,9 +54,18 @@ if not args.force and any([os.path.isfile(f) for f in [output_node_csv, output_u
 logging.debug("path = %s", path)
 logging.debug("cluster_dir = %s", cluster_dir)
 
-logging.info("Attempting to read neuron csv with pandas: %s", neuron_csv)
+# Connect to Janelia
+auth_token_file = open(args.auth_file, 'r')
+auth_token = next(auth_token_file).strip()
+np_client = Client('neuprint.janelia.org', dataset='hemibrain:v' + args.hemibrain_version, token=auth_token)
+logging.info('Connected to neuprint; client version %s', np_client.fetch_version())
 
-local_df = pd.read_csv(neuron_csv, delimiter=' ', header=None).rename(columns={0: "celltype", 1:" key"})
+
+logging.debug("path = %s", path)
+logging.debug("cluster_dir = %s", cluster_dir)
+
+logging.info("Attempting to read neuron csv with pandas: %s", neuron_csv)
+local_df = pd.read_csv(neuron_csv)
 
 # Read cluster info and prepare node df
 for filename in os.listdir(cluster_dir):
@@ -96,8 +106,24 @@ for filename in os.listdir(cluster_dir):
     local_df[cluster_name] = [int(line.strip()) for line in file.readlines()]
     file.close()
 
+local_df.drop(columns=["type", "instance"], inplace=True)
+logging.info("Finished constructing local neuron df:")
+print(local_df.head())
+print()
+
+logging.info("Fetching neuron datafrom from neuprint")
+neuprint_df, conn_df = fetch_neurons(local_df["bodyId"])
+neuprint_df.fillna(value={"type": "None", "instance": "None"}, inplace=True)
+print(neuprint_df.head())
+print()
+
+logging.info("Merging dataframes")
+FB_node_df = pd.merge(local_df, neuprint_df, on="bodyId").rename(columns={"bodyId": "id", "type": "celltype"}).set_index("id")
+print(FB_node_df.head())
+print()
+
 logging.info("Writing preprocessed node df to %s", output_node_csv)
-local_df.to_csv(output_node_csv)
+FB_node_df.to_csv(output_node_csv)
 
 logging.info("Loading edges and renaming columns from %s", edge_csv)
 edge_df = pd.read_csv(edge_csv, delimiter=' ', header=None).rename(columns={0:"node1", 1:"node2", 2:"weight"})
