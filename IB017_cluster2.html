@@ -302,7 +302,7 @@ function highlightFilter(filter) {
                   
 
                   // parsing and collecting nodes and edges from the python
-                  nodes = new vis.DataSet([{"color": "lightblue", "id": "CL112", "label": "CL112", "shape": "dot", "size": 135.5824947835641, "title": "pagerank:0.2711649895671282"}, {"color": "lightblue", "id": "CRE074", "label": "CRE074", "shape": "dot", "size": 160.5495686292078, "title": "pagerank:0.3210991372584156"}, {"color": "red", "id": "IB017", "label": "IB017", "shape": "dot", "size": 76.17158523848073, "title": "pagerank:0.15234317047696147"}, {"color": "lightblue", "id": "VES001", "label": "VES001", "shape": "dot", "size": 70.77215094257053, "title": "pagerank:0.14154430188514106"}, {"color": "lightblue", "id": "VES012", "label": "VES012", "shape": "dot", "size": 56.924200406177, "title": "pagerank:0.113848400812354"}, {"color": "green", "id": "oviIN", "label": "oviIN", "shape": "dot", "size": 0, "title": "pagerank:0"}]);
+                  nodes = new vis.DataSet([{"color": "lightblue", "id": "CL112", "label": "CL112", "shape": "dot", "size": 54.376035574283016, "title": "pagerank:0.10875207114856603"}, {"color": "lightblue", "id": "CRE074", "label": "CRE074", "shape": "dot", "size": 91.70920607522723, "title": "pagerank:0.18341841215045446"}, {"color": "red", "id": "IB017", "label": "IB017", "shape": "dot", "size": 148.03968370159367, "title": "pagerank:0.29607936740318735"}, {"color": "lightblue", "id": "VES001", "label": "VES001", "shape": "dot", "size": 30.789415351920155, "title": "pagerank:0.061578830703840313"}, {"color": "lightblue", "id": "VES012", "label": "VES012", "shape": "dot", "size": 26.95130496121944, "title": "pagerank:0.05390260992243888"}, {"color": "green", "id": "oviIN", "label": "oviIN", "shape": "dot", "size": 148.1343543357565, "title": "pagerank:0.296268708671513"}]);
                   edges = new vis.DataSet([{"color": "gray", "from": "CL112", "to": "CRE074", "value": 12.8}, {"color": "gray", "from": "CL112", "to": "IB017", "value": 6.6}, {"color": "gray", "from": "CL112", "to": "VES001", "value": 4.3}, {"color": "gray", "from": "CL112", "to": "VES012", "value": 5.0}, {"color": "gray", "from": "CRE074", "to": "oviIN", "value": 4.1}, {"color": "gray", "from": "IB017", "to": "CRE074", "value": 8.4}, {"color": "gray", "from": "IB017", "to": "oviIN", "value": 23.6}, {"color": "gray", "from": "VES012", "to": "CRE074", "value": 4.4}]);
 
                   nodeColors = {};
@@ -314,7 +314,7 @@ function highlightFilter(filter) {
                   // adding nodes and edges to the graph
                   data = {nodes: nodes, edges: edges};
 
-                  var options = {"nodes": {"borderWidth": null, "borderWidthSelected": null, "opacity": null, "font": {"size": 20}, "physics": false, "size": null}, "edges": {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": {"inherit": true}, "selfReferenceSize": null, "selfReference": {"angle": 0.7853981633974483}, "smooth": {"forceDirection": "none"}}, "physics": {"barnesHut": {"gravitationalConstant": -40000, "damping": 0.33, "avoidOverlap": 0.26}, "minVelocity": 0.75}};
+                  var options = {"nodes": {"borderWidth": null, "borderWidthSelected": null, "opacity": null, "font": {"size": 20}, "physics": false, "size": null}, "edges": {"arrows": {"to": {"enabled": true, "scaleFactor": 0.5}}, "color": {"inherit": true}, "selfReferenceSize": null, "selfReference": {"angle": 0.7853981633974483}, "smooth": {"forceDirection": "none"}}};
 
                   
 
